@@ -235,7 +235,7 @@ formatter={(v) => [`$${v}B`, `TVL`]}
             {topPerChain.map((item) => (
               <div
                 key={item.chain}
-                onClick={() => item.pool.url && window.open(item.pool.url, '_blank')}
+                onClick={() => onSelectPool?.(item.pool)}
                 className="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-white/[0.02] transition-colors"
               >
                 <div className="flex items-center gap-2.5">
@@ -263,7 +263,7 @@ formatter={(v) => [`$${v}B`, `TVL`]}
             {topApy.map((pool, i) => (
               <div
                 key={pool.id}
-                onClick={() => pool.url && window.open(pool.url, '_blank')}
+                onClick={() => onSelectPool?.(pool)}
                 className="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-white/[0.02]"
               >
                 <div className="flex items-center gap-2.5">
@@ -293,7 +293,7 @@ formatter={(v) => [`$${v}B`, `TVL`]}
               return (
                 <div
                   key={pool.id}
-                  onClick={() => pool.url && window.open(pool.url, '_blank')}
+                  onClick={() => onSelectPool?.(pool)}
                   className="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-white/[0.02]"
                 >
                   <div className="flex items-center gap-2.5">
