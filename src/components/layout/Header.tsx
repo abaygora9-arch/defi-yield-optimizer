@@ -119,7 +119,7 @@ export function HeaderBar({
   };
 
   return (
-    <header className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--bg-secondary)]/80 backdrop-blur-sm px-6 py-3">
+    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--border)] bg-[var(--bg-secondary)]/80 backdrop-blur-sm px-6 py-3">
       <div className="flex items-center gap-3">
         {/* Search toggle button */}
         <button
