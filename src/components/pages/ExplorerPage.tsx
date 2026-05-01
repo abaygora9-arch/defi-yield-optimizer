@@ -8,6 +8,9 @@ import { useMemo, useState } from 'react';
 import type { DeFiPool, RiskAssessment, StrategyRanking, Chain } from '@/types';
 import { Card, Badge } from '@/components/ui';
 import { formatUsd, formatPct, CHAIN_LABELS, CHAIN_COLORS, RISK_COLORS } from '@/utils';
+import type { Chain } from '@/types';
+
+const ALL_CHAINS = Object.keys(CHAIN_LABELS) as Chain[];
 
 interface ExplorerPageProps {
   pools: DeFiPool[];
@@ -117,10 +120,9 @@ export function ExplorerPage({ pools, risks, rankings, onSelectPool }: ExplorerP
           className="rounded-lg border border-[var(--glass-border)] bg-black/30 px-3 py-2 text-sm text-white"
         >
           <option value="all">All Chains</option>
-          <option value="ethereum">Ethereum</option>
-          <option value="bsc">BNB Chain</option>
-          <option value="arbitrum">Arbitrum</option>
-          <option value="polygon">Polygon</option>
+          {ALL_CHAINS.map((chain) => (
+            <option key={chain} value={chain}>{CHAIN_LABELS[chain]}</option>
+          ))}
         </select>
 
         {/* Risk filter */}
