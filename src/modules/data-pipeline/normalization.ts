@@ -10,6 +10,7 @@ const SUPPORTED_CHAINS: Chain[] = [
   'avalanche', 'fantom', 'gnosis', 'celo', 'linea', 'scroll', 'mantle',
   'zksync', 'starknet', 'ton', 'sui', 'aptos', 'osmosis', 'cardano',
   'berachain', 'sonic', 'hyperliquid', 'katana', 'fraxtal', 'flare',
+  'megaeth', 'ink',
 ];
 
 const CHAIN_MAP: Record<string, Chain> = {
@@ -44,6 +45,8 @@ const CHAIN_MAP: Record<string, Chain> = {
   Katana: 'katana',
   Fraxtal: 'fraxtal',
   Flare: 'flare',
+  MegaETH: 'megaeth',
+  Ink: 'ink',
 };
 
 /** Map DefiLlama chain string to our Chain type */

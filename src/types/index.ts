@@ -30,7 +30,9 @@ export type Chain =
   | 'hyperliquid'
   | 'katana'
   | 'fraxtal'
-  | 'flare';
+  | 'flare'
+  | 'megaeth'
+  | 'ink';
 
 export interface Protocol {
   name: string;

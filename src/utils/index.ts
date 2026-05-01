@@ -132,6 +132,8 @@ export const CHAIN_COLORS: Record<string, string> = {
   katana: '#FF4500',
   fraxtal: '#000000',
   flare: '#E63946',
+  megaeth: '#FF6B00',
+  ink: '#000000',
 };
 
 export const CHAIN_LABELS: Record<string, string> = {
@@ -162,6 +164,8 @@ export const CHAIN_LABELS: Record<string, string> = {
   katana: 'Katana',
   fraxtal: 'Fraxtal',
   flare: 'Flare',
+  megaeth: 'MegaETH',
+  ink: 'Ink',
 };
 
 // --- Risk Category Colors ---
