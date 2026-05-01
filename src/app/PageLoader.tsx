@@ -1,23 +1,36 @@
 'use client';
 
-export default function PageLoader() {
-  return (
+import dynamic from 'next/dynamic';
+
+const Dashboard = dynamic(() => import('./DashboardClient'), {
+  ssr: false,
+  loading: () => (
     <div style={{ 
       display: 'flex', 
       height: '100vh', 
       alignItems: 'center', 
       justifyContent: 'center',
       background: '#0a0e1a',
-      color: '#fff',
+      color: '#94a3b8',
       fontFamily: 'system-ui'
     }}>
       <div style={{ textAlign: 'center' }}>
-        <h1 style={{ fontSize: 24, marginBottom: 8 }}>DeFi Yield Optimizer</h1>
-        <p style={{ color: '#94a3b8', fontSize: 14 }}>Loading...</p>
-        <p style={{ color: '#475569', fontSize: 11, marginTop: 16 }}>
-          Client rendering: {typeof window !== 'undefined' ? '✓' : '✗'}
-        </p>
+        <div style={{
+          width: 40,
+          height: 40,
+          border: '2px solid rgba(59, 130, 246, 0.3)',
+          borderTopColor: '#3b82f6',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          margin: '0 auto 16px'
+        }} />
+        <div style={{ fontSize: 13 }}>Loading DeFi data...</div>
+        <div style={{ fontSize: 10, color: '#475569', marginTop: 4 }}>Fetching from DefiLlama API</div>
       </div>
     </div>
-  );
+  ),
+});
+
+export default function PageLoader() {
+  return <Dashboard />;
 }
