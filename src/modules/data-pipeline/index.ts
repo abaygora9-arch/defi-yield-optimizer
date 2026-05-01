@@ -1,5 +1,5 @@
 // ============================================================
-// Data Pipeline — Main Entry Point
+// Data Pipeline — Main Entry Point (with heavy caching)
 // ============================================================
 
 import type { DeFiPool, Chain } from '@/types';
@@ -14,23 +14,46 @@ export interface PipelineOptions {
   stablecoinOnly?: boolean;
 }
 
+// Global cache for ALL enriched pools (shared across all requests)
+let globalEnrichedPools: DeFiPool[] | null = null;
+let globalCacheTime = 0;
+const GLOBAL_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+/** Get or build the global enriched pool cache */
+async function getGlobalPools(): Promise<DeFiPool[]> {
+  const now = Date.now();
+  if (globalEnrichedPools && (now - globalCacheTime) < GLOBAL_CACHE_TTL) {
+    return globalEnrichedPools;
+  }
+
+  console.time('pipeline-fetch');
+  const rawPools = await fetchDefiLlamaPools();
+  console.timeEnd('pipeline-fetch');
+
+  console.time('pipeline-normalize');
+  const normalized = normalizePools(rawPools);
+  console.timeEnd('pipeline-normalize');
+
+  console.time('pipeline-enrich');
+  const enriched = enrichPools(normalized);
+  console.timeEnd('pipeline-enrich');
+
+  globalEnrichedPools = enriched;
+  globalCacheTime = now;
+  console.log(`[Pipeline] Cached ${enriched.length} pools globally`);
+  return enriched;
+}
+
 /** Run the full data pipeline: fetch → normalize → enrich → filter */
 export async function runPipeline(
   options: PipelineOptions = {}
 ): Promise<DeFiPool[]> {
   const { chains, minTvl = 0, stablecoinOnly = false } = options;
 
-  const cacheKey = `pipeline_${chains?.join(',') ?? 'all'}_${minTvl}_${stablecoinOnly}`;
-  const cached = cache.get<DeFiPool[]>(cacheKey);
-  if (cached) return cached;
+  // Get all enriched pools from global cache
+  let pools = await getGlobalPools();
 
-  // Stage 1: Ingestion
-  const rawPools = await fetchDefiLlamaPools();
-
-  // Stage 2: Normalization
-  let pools = normalizePools(rawPools);
-
-  // Stage 3: Filtering
+  // Filter (cheap - just array filter on cached data)
   if (chains && chains.length > 0) {
     pools = pools.filter((p) => chains.includes(p.chain));
   }
@@ -41,10 +64,6 @@ export async function runPipeline(
     pools = pools.filter((p) => p.stablecoin);
   }
 
-  // Stage 4: Enrichment
-  pools = enrichPools(pools);
-
-  cache.set(cacheKey, pools, 3 * 60 * 1000); // 3 min
   return pools;
 }
 
