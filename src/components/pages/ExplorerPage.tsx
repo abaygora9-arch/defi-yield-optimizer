@@ -8,7 +8,6 @@ import { useMemo, useState } from 'react';
 import type { DeFiPool, RiskAssessment, StrategyRanking, Chain } from '@/types';
 import { Card, Badge } from '@/components/ui';
 import { formatUsd, formatPct, CHAIN_LABELS, CHAIN_COLORS, RISK_COLORS } from '@/utils';
-import type { Chain } from '@/types';
 
 const ALL_CHAINS = Object.keys(CHAIN_LABELS) as Chain[];
 
