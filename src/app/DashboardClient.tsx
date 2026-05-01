@@ -1,24 +1,24 @@
-// ============================================================
-// Main Dashboard — Extended with Portfolio, Compare, Watchlist
-// ============================================================
-
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import type { DeFiPool, StrategyMode } from '@/types';
 import { usePools, useAutoRefresh } from '@/hooks/useData';
 import { Sidebar, type Page } from '@/components/layout/Sidebar';
 import { HeaderBar } from '@/components/layout/Header';
-import { OverviewPage } from '@/components/pages/OverviewPage';
-import { AnalyticsPage } from '@/components/pages/AnalyticsPage';
-import { StrategiesPage } from '@/components/pages/StrategiesPage';
-import { ExplorerPage } from '@/components/pages/ExplorerPage';
-import { SimulatorPage } from '@/components/pages/SimulatorPage';
-import { PortfolioBuilder } from '@/components/pages/PortfolioPage';
-import { ComparePage } from '@/components/pages/ComparePage';
-import { WatchlistPage } from '@/components/pages/WatchlistPage';
-import { PoolAnalyzer } from '@/components/pool/PoolAnalyzer';
-import { AlertsPage } from '@/components/pages/AlertsPage';
+
+// Lazy load heavy page components
+import dynamic from 'next/dynamic';
+
+const OverviewPage = dynamic(() => import('@/components/pages/OverviewPage').then(m => ({ default: m.OverviewPage })), { ssr: false });
+const AnalyticsPage = dynamic(() => import('@/components/pages/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })), { ssr: false });
+const StrategiesPage = dynamic(() => import('@/components/pages/StrategiesPage').then(m => ({ default: m.StrategiesPage })), { ssr: false });
+const ExplorerPage = dynamic(() => import('@/components/pages/ExplorerPage').then(m => ({ default: m.ExplorerPage })), { ssr: false });
+const SimulatorPage = dynamic(() => import('@/components/pages/SimulatorPage').then(m => ({ default: m.SimulatorPage })), { ssr: false });
+const PortfolioBuilder = dynamic(() => import('@/components/pages/PortfolioPage').then(m => ({ default: m.PortfolioBuilder })), { ssr: false });
+const ComparePage = dynamic(() => import('@/components/pages/ComparePage').then(m => ({ default: m.ComparePage })), { ssr: false });
+const WatchlistPage = dynamic(() => import('@/components/pages/WatchlistPage').then(m => ({ default: m.WatchlistPage })), { ssr: false });
+const PoolAnalyzer = dynamic(() => import('@/components/pool/PoolAnalyzer').then(m => ({ default: m.PoolAnalyzer })), { ssr: false });
+const AlertsPage = dynamic(() => import('@/components/pages/AlertsPage').then(m => ({ default: m.AlertsPage })), { ssr: false });
 
 const PAGE_TITLES: Record<Page, { title: string; subtitle: string }> = {
   overview: { title: 'Market Overview', subtitle: 'Real-time snapshot of DeFi yield landscape' },
@@ -38,6 +38,7 @@ export default function Dashboard() {
   const [selectedPool, setSelectedPool] = useState<DeFiPool | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshInterval, setRefreshInterval] = useState(0);
+  const [alertCount, setAlertCount] = useState(0);
 
   const { data, loading, error, refresh, lastRefreshTime } = usePools({ mode });
   const autoRefresh = useAutoRefresh(refresh, refreshInterval);
@@ -48,37 +49,34 @@ export default function Dashboard() {
 
   const handleRefreshIntervalChange = useCallback((seconds: number) => {
     setRefreshInterval(seconds);
-    autoRefresh.toggle(seconds);
-  }, [autoRefresh]);
+  }, []);
 
-  // Global search filter: applies to all pages
+  const pageInfo = PAGE_TITLES[activePage];
+
+  // Filter by search query
   const searchFilteredPools = useMemo(() => {
     if (!data || !searchQuery.trim()) return data?.pools ?? [];
     const q = searchQuery.toLowerCase().trim();
-    return data.pools.filter(
-      (p) =>
-        p.symbol.toLowerCase().includes(q) ||
-        p.protocol.toLowerCase().includes(q) ||
-        p.chain.includes(q)
+    return data.pools.filter((p) =>
+      p.symbol.toLowerCase().includes(q) ||
+      p.protocol.toLowerCase().includes(q) ||
+      p.chain.toLowerCase().includes(q)
     );
   }, [data, searchQuery]);
 
-  // Search-filtered risks and rankings
   const searchFilteredRisks = useMemo(() => {
     if (!data) return [];
     if (!searchQuery.trim()) return data.risks;
-    const poolIds = new Set(searchFilteredPools.map((p) => p.id));
-    return data.risks.filter((r) => poolIds.has(r.poolId));
+    const poolIds = new Set(searchFilteredPools.map(p => p.id));
+    return data.risks.filter(r => poolIds.has(r.poolId));
   }, [data, searchQuery, searchFilteredPools]);
 
   const searchFilteredRankings = useMemo(() => {
     if (!data) return [];
     if (!searchQuery.trim()) return data.rankings;
-    const poolIds = new Set(searchFilteredPools.map((p) => p.id));
-    return data.rankings.filter((r) => poolIds.has(r.poolId));
+    const poolIds = new Set(searchFilteredPools.map(p => p.id));
+    return data.rankings.filter(r => poolIds.has(r.poolId));
   }, [data, searchQuery, searchFilteredPools]);
-
-  const pageInfo = PAGE_TITLES[activePage];
 
   if (loading && !data) {
     return (
@@ -118,7 +116,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex min-h-screen bg-mesh">
-      <Sidebar active={activePage} onNavigate={setActivePage} poolCount={data.stats.totalPools} />
+      <Sidebar active={activePage} onNavigate={setActivePage} poolCount={data.stats.totalPools} alertCount={alertCount} />
 
       <div className="ml-[200px] flex-1">
         <HeaderBar
@@ -161,7 +159,7 @@ export default function Dashboard() {
             <WatchlistPage pools={pools} risks={risks} />
           )}
           {activePage === 'alerts' && (
-            <AlertsPage pools={pools} risks={risks} />
+            <AlertsPage pools={pools} risks={risks} onAlertCountChange={setAlertCount} />
           )}
         </main>
       </div>
@@ -172,4 +170,3 @@ export default function Dashboard() {
     </div>
   );
 }
-  const [alertCount, setAlertCount] = useState(0);
