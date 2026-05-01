@@ -4,8 +4,8 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import type { DeFiPool, RiskAssessment, StrategyMode } from '@/types';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import type { DeFiPool, RiskAssessment, StrategyMode, SavedSimulation } from '@/types';
 import { Card, Badge, Button } from '@/components/ui';
 import { formatUsd, formatPct, CHAIN_LABELS } from '@/utils';
 import { useSimulation } from '@/hooks/useData';
@@ -13,6 +13,26 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell,
 } from 'recharts';
+
+const SAVED_SIMS_KEY = 'defi_saved_sims';
+const MAX_SAVED_SIMS = 20;
+
+function loadSavedSims(): SavedSimulation[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_SIMS_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function saveSimsToStorage(sims: SavedSimulation[]) {
+  localStorage.setItem(SAVED_SIMS_KEY, JSON.stringify(sims));
+}
+
+function generateId(): string {
+  return `sim_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
 
 interface SimulatorPageProps {
   pools: DeFiPool[];
@@ -26,6 +46,61 @@ export function SimulatorPage({ pools, risks, mode }: SimulatorPageProps) {
   const [capital, setCapital] = useState(10000);
   const [days, setDays] = useState(365);
   const [searchQuery, setSearchQuery] = useState('');
+  const [savedSims, setSavedSims] = useState<SavedSimulation[]>([]);
+  const [showSaved, setShowSaved] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  // Load saved sims on mount
+  useEffect(() => {
+    setSavedSims(loadSavedSims());
+  }, []);
+
+  const selectedPool = pools.find((p) => p.id === selectedPoolId);
+
+  // Save current simulation
+  const handleSave = useCallback(() => {
+    if (!result || !selectedPool) return;
+    const sim: SavedSimulation = {
+      id: generateId(),
+      poolSymbol: selectedPool.symbol,
+      poolId: selectedPool.id,
+      capital,
+      days,
+      riskMode: mode,
+      results: {
+        expectedReturn: result.simulation.expectedReturn,
+        worstCase: result.simulation.worstCase,
+        bestCase: result.simulation.bestCase,
+        sharpeRatio: result.simulation.sharpeLikeRatio,
+        netReturn: result.simulation.netReturn,
+      },
+      timestamp: new Date().toISOString(),
+    };
+    setSavedSims((prev) => {
+      const next = [sim, ...prev].slice(0, MAX_SAVED_SIMS);
+      saveSimsToStorage(next);
+      return next;
+    });
+    setSaveMessage('Simulation saved!');
+    setTimeout(() => setSaveMessage(null), 2000);
+  }, [result, selectedPool, capital, days, mode]);
+
+  // Load a saved simulation
+  const handleLoad = useCallback((sim: SavedSimulation) => {
+    setCapital(sim.capital);
+    setDays(sim.days);
+    setSelectedPoolId(sim.poolId);
+    setShowSaved(false);
+  }, []);
+
+  // Delete a saved simulation
+  const handleDeleteSaved = useCallback((id: string) => {
+    setSavedSims((prev) => {
+      const next = prev.filter((s) => s.id !== id);
+      saveSimsToStorage(next);
+      return next;
+    });
+  }, []);
 
   const riskMap = useMemo(() => new Map(risks.map((r) => [r.poolId, r])), [risks]);
 
@@ -37,8 +112,6 @@ export function SimulatorPage({ pools, risks, mode }: SimulatorPageProps) {
       .filter((p) => p.symbol.toLowerCase().includes(q) || p.protocol.toLowerCase().includes(q))
       .slice(0, 20);
   }, [pools, searchQuery]);
-
-  const selectedPool = pools.find((p) => p.id === selectedPoolId);
 
   const handleSimulate = () => {
     if (!selectedPool) return;
@@ -172,6 +245,25 @@ export function SimulatorPage({ pools, risks, mode }: SimulatorPageProps) {
 
       {result && selectedPool && (
         <div className="space-y-4 animate-fade-in">
+          {/* Save / Saved toggle */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSave}
+              className="rounded-lg bg-[var(--success)]/20 px-4 py-2 text-[12px] font-medium text-[var(--success)] transition-all hover:bg-[var(--success)]/30"
+            >
+              💾 Save Simulation
+            </button>
+            {saveMessage && (
+              <span className="text-[11px] text-[var(--success)] animate-fade-in">{saveMessage}</span>
+            )}
+            <button
+              onClick={() => setShowSaved(!showSaved)}
+              className="rounded-lg bg-white/[0.05] px-4 py-2 text-[12px] font-medium text-[var(--muted-foreground)] transition-all hover:bg-white/[0.10]"
+            >
+              📂 Saved ({savedSims.length})
+            </button>
+          </div>
+
           {/* Result Stats */}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <ResultStat label="Expected Return" value={formatUsd(result.simulation.expectedReturn)} color="text-blue-400" />
@@ -244,6 +336,71 @@ export function SimulatorPage({ pools, risks, mode }: SimulatorPageProps) {
             <div className="mt-2 text-[10px] text-[var(--muted-foreground)]">{result.explanation.riskNote}</div>
           </Card>
         </div>
+      )}
+
+      {/* Saved Simulations Panel */}
+      {showSaved && (
+        <Card className="glass glow-purple p-0 overflow-hidden animate-fade-in">
+          <div className="flex items-center justify-between border-b border-[var(--glass-border)] px-5 py-3">
+            <div className="text-sm font-semibold">📂 Saved Simulations ({savedSims.length}/{MAX_SAVED_SIMS})</div>
+            <button
+              onClick={() => setShowSaved(false)}
+              className="text-[var(--muted-foreground)] hover:text-white text-sm"
+            >
+              ✕
+            </button>
+          </div>
+
+          {savedSims.length === 0 ? (
+            <div className="flex h-[120px] items-center justify-center text-xs text-[var(--muted-foreground)]">
+              No saved simulations yet. Run a simulation and click Save.
+            </div>
+          ) : (
+            <div className="divide-y divide-[var(--glass-border)] max-h-[400px] overflow-y-auto">
+              {savedSims.map((sim) => (
+                <div key={sim.id} className="flex items-center justify-between px-5 py-3 hover:bg-white/[0.02] transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <div className="text-xs font-medium">{sim.poolSymbol}</div>
+                      <div className="text-[10px] text-[var(--muted-foreground)]">
+                        ${sim.capital.toLocaleString()} · {sim.days}d · {sim.riskMode}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <div className="text-xs font-mono text-[var(--success)]">
+                        {formatUsd(sim.results.expectedReturn)}
+                      </div>
+                      <div className="text-[9px] text-[var(--muted-foreground)]">
+                        Sharpe: {sim.results.sharpeRatio.toFixed(3)}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] text-[var(--muted-foreground)]">
+                        {new Date(sim.timestamp).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => handleLoad(sim)}
+                        className="rounded-md bg-[var(--blue)]/20 px-2 py-1 text-[10px] text-[var(--blue)] hover:bg-[var(--blue)]/30"
+                      >
+                        Load
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSaved(sim.id)}
+                        className="rounded-md bg-[var(--danger)]/20 px-2 py-1 text-[10px] text-[var(--danger)] hover:bg-[var(--danger)]/30"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
       )}
 
       {/* Empty state */}

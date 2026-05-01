@@ -7,6 +7,7 @@
 import { useMemo, useState } from 'react';
 import type { DeFiPool, RiskAssessment, Chain } from '@/types';
 import { Card } from '@/components/ui';
+import { PoolHeatmap } from '@/components/charts/PoolHeatmap';
 import { formatUsd, formatPct, CHAIN_LABELS, CHAIN_COLORS, RISK_COLORS } from '@/utils';
 import {
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -166,6 +167,9 @@ export function AnalyticsPage({ pools, risks }: AnalyticsPageProps) {
           </ResponsiveContainer>
         </div>
       </Card>
+
+      {/* Pool Heatmap */}
+      <PoolHeatmap pools={pools} risks={risks} />
 
       {/* Grid of smaller charts */}
       <div className="grid gap-4 lg:grid-cols-3">

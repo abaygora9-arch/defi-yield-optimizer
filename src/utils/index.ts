@@ -126,3 +126,76 @@ export const RISK_COLORS: Record<string, string> = {
   'High': '#F97316',
   'Very High': '#EF4444',
 };
+
+// --- Export Utilities ---
+
+/** Trigger a client-side file download */
+export function downloadFile(content: string, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/** Escape a CSV field (wrap in quotes if it contains comma/quote/newline) */
+function escapeCsvField(value: string | number | null | undefined): string {
+  const str = String(value ?? '');
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+/** Export pool data as CSV string */
+export function exportPoolsToCsv(
+  pools: import('@/types').DeFiPool[],
+  risks: import('@/types').RiskAssessment[],
+): string {
+  const riskMap = new Map(risks.map((r) => [r.poolId, r]));
+  const header = 'Symbol,Protocol,Chain,TVL,APY,30d Avg,Risk Score,Risk Category';
+  const rows = pools.map((pool) => {
+    const risk = riskMap.get(pool.id);
+    return [
+      escapeCsvField(pool.symbol),
+      escapeCsvField(pool.protocol),
+      escapeCsvField(pool.chain),
+      escapeCsvField(pool.tvlUsd),
+      escapeCsvField(pool.apy),
+      escapeCsvField(pool.apyMean30d),
+      escapeCsvField(risk?.score ?? ''),
+      escapeCsvField(risk?.category ?? ''),
+    ].join(',');
+  });
+  return [header, ...rows].join('\n');
+}
+
+/** Export pool data as JSON string */
+export function exportPoolsToJson(
+  pools: import('@/types').DeFiPool[],
+  risks: import('@/types').RiskAssessment[],
+): string {
+  const riskMap = new Map(risks.map((r) => [r.poolId, r]));
+  const data = pools.map((pool) => ({
+    ...pool,
+    risk: riskMap.get(pool.id) ?? null,
+  }));
+  return JSON.stringify(data, null, 2);
+}
+
+/** Debounce utility */
+export function debounce<T extends (...args: unknown[]) => void>(fn: T, ms: number): T & { cancel: () => void } {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const debounced = (...args: unknown[]) => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
+  };
+  debounced.cancel = () => {
+    if (timer) clearTimeout(timer);
+  };
+  return debounced as T & { cancel: () => void };
+}

@@ -110,6 +110,36 @@ export interface UserPreferences {
   stablecoinOnly: boolean;
 }
 
+// --- Yield Alerts ---
+export interface YieldAlert {
+  id: string;
+  poolSymbol: string;
+  poolId: string;
+  threshold: number;           // APY %
+  direction: 'above' | 'below';
+  enabled: boolean;
+  createdAt: string;           // ISO timestamp
+  triggeredAt?: string;        // ISO timestamp when last triggered
+}
+
+// --- Saved Simulations ---
+export interface SavedSimulation {
+  id: string;
+  poolSymbol: string;
+  poolId: string;
+  capital: number;
+  days: number;
+  riskMode: StrategyMode;
+  results: {
+    expectedReturn: number;
+    worstCase: number;
+    bestCase: number;
+    sharpeRatio: number;
+    netReturn: number;
+  };
+  timestamp: string;           // ISO timestamp
+}
+
 // --- API Response Types ---
 export interface DefiLlamaPoolResponse {
   chain: string;

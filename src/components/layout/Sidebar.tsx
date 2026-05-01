@@ -7,7 +7,7 @@
 import { cn } from '@/utils';
 import { WalletButton } from '@/components/ui/WalletButton';
 
-export type Page = 'overview' | 'analytics' | 'strategies' | 'explorer' | 'simulator' | 'portfolio' | 'compare' | 'watchlist';
+export type Page = 'overview' | 'analytics' | 'strategies' | 'explorer' | 'simulator' | 'portfolio' | 'compare' | 'watchlist' | 'alerts';
 
 const NAV: { id: Page; icon: string; label: string }[] = [
   { id: 'overview', icon: '⬡', label: 'Overview' },
@@ -18,15 +18,17 @@ const NAV: { id: Page; icon: string; label: string }[] = [
   { id: 'portfolio', icon: '◎', label: 'Portfolio' },
   { id: 'compare', icon: '⇄', label: 'Compare' },
   { id: 'watchlist', icon: '★', label: 'Watchlist' },
+  { id: 'alerts', icon: '🔔', label: 'Alerts' },
 ];
 
 interface SidebarProps {
   active: Page;
   onNavigate: (p: Page) => void;
   poolCount?: number;
+  alertCount?: number;
 }
 
-export function Sidebar({ active, onNavigate, poolCount }: SidebarProps) {
+export function Sidebar({ active, onNavigate, poolCount, alertCount }: SidebarProps) {
   return (
     <aside className="fixed left-0 top-0 z-50 flex h-screen w-[200px] flex-col border-r border-[var(--border)] bg-[var(--bg-secondary)]">
       {/* Logo */}
@@ -59,6 +61,7 @@ export function Sidebar({ active, onNavigate, poolCount }: SidebarProps) {
       <nav className="flex-1 space-y-0.5 px-3">
         {NAV.map((item) => {
           const isActive = active === item.id;
+          const showBadge = item.id === 'alerts' && alertCount && alertCount > 0;
           return (
             <button
               key={item.id}
@@ -74,6 +77,11 @@ export function Sidebar({ active, onNavigate, poolCount }: SidebarProps) {
                 {item.icon}
               </span>
               {item.label}
+              {showBadge && (
+                <span className="ml-auto inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--amber)] px-1 text-[9px] font-bold text-black">
+                  {alertCount}
+                </span>
+              )}
             </button>
           );
         })}

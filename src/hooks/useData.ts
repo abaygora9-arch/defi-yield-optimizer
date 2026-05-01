@@ -47,6 +47,7 @@ export function usePools(initialFilters?: Partial<Filters>) {
     ...DEFAULT_FILTERS,
     ...initialFilters,
   });
+  const [lastRefreshTime, setLastRefreshTime] = useState<string>('');
   const abortRef = useRef<AbortController | null>(null);
 
   const fetchData = useCallback(async (f: Filters) => {
@@ -75,6 +76,7 @@ export function usePools(initialFilters?: Partial<Filters>) {
       if (json.error) throw new Error(json.error);
 
       setData(json);
+      setLastRefreshTime(new Date().toISOString());
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') return;
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -95,7 +97,57 @@ export function usePools(initialFilters?: Partial<Filters>) {
     fetchData(filters);
   }, [filters, fetchData]);
 
-  return { data, loading, error, filters, updateFilters, refresh };
+  return { data, loading, error, filters, updateFilters, refresh, lastRefreshTime };
+}
+
+// --- useAutoRefresh Hook ---
+export function useAutoRefresh(refresh: () => void, intervalSeconds: number) {
+  const [enabled, setEnabled] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Load preference from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('defi-auto-refresh');
+    if (stored) {
+      const seconds = parseInt(stored, 10);
+      if (!isNaN(seconds) && seconds > 0) {
+        setEnabled(true);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Clear existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    if (enabled && intervalSeconds > 0) {
+      intervalRef.current = setInterval(() => {
+        refresh();
+      }, intervalSeconds * 1000);
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [enabled, intervalSeconds, refresh]);
+
+  const toggle = useCallback((seconds: number) => {
+    if (seconds > 0) {
+      setEnabled(true);
+      localStorage.setItem('defi-auto-refresh', String(seconds));
+    } else {
+      setEnabled(false);
+      localStorage.removeItem('defi-auto-refresh');
+    }
+  }, []);
+
+  return { enabled, interval: enabled ? intervalSeconds : 0, toggle };
 }
 
 // --- useSimulation Hook ---
