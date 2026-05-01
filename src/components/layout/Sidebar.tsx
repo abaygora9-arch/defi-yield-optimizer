@@ -26,9 +26,10 @@ interface SidebarProps {
   onNavigate: (p: Page) => void;
   poolCount?: number;
   alertCount?: number;
+  chainCount?: number;
 }
 
-export function Sidebar({ active, onNavigate, poolCount, alertCount }: SidebarProps) {
+export function Sidebar({ active, onNavigate, poolCount, alertCount, chainCount }: SidebarProps) {
   return (
     <aside className="fixed left-0 top-0 z-50 flex h-screen w-[200px] flex-col border-r border-[var(--border)] bg-[var(--bg-secondary)]">
       {/* Logo */}
@@ -90,7 +91,7 @@ export function Sidebar({ active, onNavigate, poolCount, alertCount }: SidebarPr
       {/* Footer */}
       <div className="border-t border-[var(--border)] px-5 py-3">
         <div className="text-[9px] text-[var(--text-muted)]">Powered by DefiLlama</div>
-        <div className="text-[9px] text-[var(--text-muted)]">4 chains · Real-time</div>
+        <div className="text-[9px] text-[var(--text-muted)]">{chainCount ?? 29} chains · Real-time</div>
       </div>
     </aside>
   );
