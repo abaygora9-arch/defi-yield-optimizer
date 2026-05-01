@@ -3,7 +3,34 @@
 // ============================================================
 
 // --- Chain & Protocol ---
-export type Chain = 'ethereum' | 'bsc' | 'arbitrum' | 'polygon';
+export type Chain =
+  | 'ethereum'
+  | 'bsc'
+  | 'arbitrum'
+  | 'polygon'
+  | 'solana'
+  | 'base'
+  | 'optimism'
+  | 'avalanche'
+  | 'fantom'
+  | 'gnosis'
+  | 'celo'
+  | 'linea'
+  | 'scroll'
+  | 'mantle'
+  | 'zksync'
+  | 'starknet'
+  | 'ton'
+  | 'sui'
+  | 'aptos'
+  | 'osmosis'
+  | 'cardano'
+  | 'berachain'
+  | 'sonic'
+  | 'hyperliquid'
+  | 'katana'
+  | 'fraxtal'
+  | 'flare';
 
 export interface Protocol {
   name: string;

@@ -9,7 +9,12 @@ import { Button, Toggle } from '@/components/ui';
 import { CHAIN_LABELS } from '@/utils';
 import type { Filters } from '@/hooks/useData';
 
-const ALL_CHAINS: Chain[] = ['ethereum', 'bsc', 'arbitrum', 'polygon'];
+const ALL_CHAINS: Chain[] = [
+  'ethereum', 'bsc', 'arbitrum', 'polygon', 'solana', 'base', 'optimism',
+  'avalanche', 'fantom', 'gnosis', 'celo', 'linea', 'scroll', 'mantle',
+  'zksync', 'starknet', 'ton', 'sui', 'aptos', 'osmosis', 'cardano',
+  'berachain', 'sonic', 'hyperliquid', 'katana', 'fraxtal', 'flare',
+];
 const MODES: { value: StrategyMode; label: string; emoji: string }[] = [
   { value: 'conservative', label: 'Conservative', emoji: '🛡️' },
   { value: 'balanced', label: 'Balanced', emoji: '⚖️' },

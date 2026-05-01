@@ -5,14 +5,45 @@
 import type { Chain, DeFiPool, DefiLlamaPoolResponse } from '@/types';
 import { clamp, aprToApy } from '@/utils';
 
-const SUPPORTED_CHAINS: Chain[] = ['ethereum', 'bsc', 'arbitrum', 'polygon'];
+const SUPPORTED_CHAINS: Chain[] = [
+  'ethereum', 'bsc', 'arbitrum', 'polygon', 'solana', 'base', 'optimism',
+  'avalanche', 'fantom', 'gnosis', 'celo', 'linea', 'scroll', 'mantle',
+  'zksync', 'starknet', 'ton', 'sui', 'aptos', 'osmosis', 'cardano',
+  'berachain', 'sonic', 'hyperliquid', 'katana', 'fraxtal', 'flare',
+];
 
 const CHAIN_MAP: Record<string, Chain> = {
   Ethereum: 'ethereum',
   BSC: 'bsc',
-  'Binance': 'bsc',
+  Binance: 'bsc',
+  'BNB Chain': 'bsc',
   Arbitrum: 'arbitrum',
   Polygon: 'polygon',
+  Solana: 'solana',
+  Base: 'base',
+  'OP Mainnet': 'optimism',
+  Optimism: 'optimism',
+  Avalanche: 'avalanche',
+  Fantom: 'fantom',
+  Gnosis: 'gnosis',
+  Celo: 'celo',
+  Linea: 'linea',
+  Scroll: 'scroll',
+  Mantle: 'mantle',
+  zkSync: 'zksync',
+  Starknet: 'starknet',
+  TON: 'ton',
+  Sui: 'sui',
+  Aptos: 'aptos',
+  Osmosis: 'osmosis',
+  Cardano: 'cardano',
+  Berachain: 'berachain',
+  Sonic: 'sonic',
+  'Hyperliquid L1': 'hyperliquid',
+  Hyperliquid: 'hyperliquid',
+  Katana: 'katana',
+  Fraxtal: 'fraxtal',
+  Flare: 'flare',
 };
 
 /** Map DefiLlama chain string to our Chain type */
