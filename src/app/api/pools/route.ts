@@ -66,7 +66,10 @@ export async function GET(request: NextRequest) {
     };
 
     responseCache.set(cacheKey, { data: result, time: now });
-    return NextResponse.json(result);
+    const response = NextResponse.json(result);
+    // CDN cache: 5 min stale-while-revalidate
+    response.headers.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+    return response;
   } catch (error) {
     console.error('API Error:', error);
     return NextResponse.json({ error: 'Failed to fetch pool data', details: String(error) }, { status: 500 });

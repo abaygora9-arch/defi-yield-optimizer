@@ -45,23 +45,28 @@ function calcTvlRisk(pool: DeFiPool): number {
   return 1 - liquidityScore;
 }
 
+// Pre-computed APY stats (cached per batch)
+let cachedApyStats: { mean: number; std: number } | null = null;
+
+function getApyStats(pools: DeFiPool[]): { mean: number; std: number } {
+  if (cachedApyStats) return cachedApyStats;
+  const apyValues = pools.map((p) => p.apy);
+  cachedApyStats = { mean: mean(apyValues), std: stdDev(apyValues) };
+  return cachedApyStats;
+}
+
 /** APY Anomaly: extreme APY is suspicious */
 function calcApyAnomaly(pool: DeFiPool, allPools: DeFiPool[]): number {
-  const apyValues = allPools.map((p) => p.apy);
-  const m = mean(apyValues);
-  const sd = stdDev(apyValues);
+  const { mean: m, std: sd } = getApyStats(allPools);
 
   if (sd === 0) return 0;
 
-  // Z-score based
   const zScore = (pool.apy - m) / sd;
 
-  // Penalize high outliers more than low
   if (pool.apy > m + 2 * sd) {
     return clamp(Math.abs(zScore) / 5, 0, 1);
   }
 
-  // Also flag very low APY (potential dead pool)
   if (pool.apy < 0.1) return 0.3;
 
   return clamp(Math.abs(zScore) / 5, 0, 0.5);
@@ -158,5 +163,7 @@ export function assessRisk(
 
 /** Assess risk for all pools */
 export function assessAllRisks(pools: DeFiPool[]): RiskAssessment[] {
+  cachedApyStats = null; // Reset for fresh computation
+  const stats = getApyStats(pools); // Pre-compute once
   return pools.map((pool) => assessRisk(pool, pools));
 }
