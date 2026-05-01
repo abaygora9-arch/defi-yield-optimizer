@@ -167,7 +167,7 @@ export function ExplorerPage({ pools, risks, rankings, onSelectPool }: ExplorerP
                 return (
                   <tr
                     key={pool.id}
-                    onClick={() => pool.url ? window.open(pool.url, '_blank') : onSelectPool(pool)}
+                    onClick={() => onSelectPool(pool)}
                     className="cursor-pointer border-b border-[var(--glass-border)]/30 transition-colors hover:bg-white/5"
                   >
                     <td className="px-4 py-2.5 text-xs text-[var(--muted-foreground)]">{i + 1}</td>

@@ -86,7 +86,7 @@ export function StrategiesPage({ pools, risks, rankings, mode, onSelectPool }: S
             return (
               <div
                 key={rank.poolId}
-                onClick={() => pool.url ? window.open(pool.url, '_blank') : onSelectPool(pool)}
+                onClick={() => onSelectPool(pool)}
                 className="glass group cursor-pointer p-4 transition-all hover:bg-white/10 hover:shadow-lg"
               >
                 <div className="flex items-start justify-between">
